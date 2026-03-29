@@ -13,7 +13,7 @@ import java.io.InputStream;
 public class BigQueryConfig {
     @Bean
     public BigQuery bigQuery() throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("");
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
         GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream);
         return BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     }
