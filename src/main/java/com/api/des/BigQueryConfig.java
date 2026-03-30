@@ -13,7 +13,26 @@ import java.io.InputStream;
 public class BigQueryConfig {
     @Bean
     public BigQuery bigQuery() throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
+        String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+        InputStream inputStream;
+
+        if (credentialsPath != null && !credentialsPath.isEmpty()) {
+            java.io.File file = new java.io.File(credentialsPath);
+            if (file.exists()) {
+                inputStream = new java.io.FileInputStream(file);
+            } else {
+                inputStream = getClass().getClassLoader()
+                        .getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
+            }
+        } else {
+            inputStream = getClass().getClassLoader()
+                    .getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
+        }
+
+        if (inputStream == null) {
+            throw new IOException("Could not find BigQuery credentials file!");
+        }
+
         GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream);
         return BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     }
