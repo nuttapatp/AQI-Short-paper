@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: aqi-data-service
+    runtime: docker
+    envVars:
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
