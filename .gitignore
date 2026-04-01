@@ -41,4 +41,5 @@ build/
 *-adminsdk-*.json
 *firebase-adminsdk*.json
 *shortpaper-airpollution*.json
+*air-quality-api*.json
 line-storage*.json

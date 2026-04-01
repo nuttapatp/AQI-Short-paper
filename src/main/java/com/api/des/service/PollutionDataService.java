@@ -8,6 +8,7 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -56,18 +57,20 @@ public class PollutionDataService {
     public void fetchCurrentDataAndStoreInBigQuery(String city) {
         double[] coordinates = CITY_COORDINATES.get(city);
         if (coordinates != null) {
+            logger.debug("Fetching current AQI for city: {} at [{}, {}]", city, coordinates[0], coordinates[1]);
             int aqi = getCurrentAQI(coordinates[0], coordinates[1]);
+            logger.debug("AQI fetched for {}: {}", city, aqi);
             long timestamp = System.currentTimeMillis() / 1000;
 
             storeDataInBigQuery(aqi, coordinates[0], coordinates[1], timestamp, city, "currentaqi");
 
             if (isDataStoredSuccessfully(city, timestamp, "currentaqi")) {
-                logger.info("Data for city {} stored successfully in BigQuery.", city);
+                logger.info("Current AQI for {} stored in BigQuery: {}", city, aqi);
             } else {
                 logger.warn("Failed to store data for city {} in BigQuery.", city);
             }
         } else {
-            // Handle unknown city
+            logger.warn("Unknown city requested: {}", city);
         }
     }
 
@@ -77,8 +80,10 @@ public class PollutionDataService {
     }
 
     public void fetchAllCurrentDataAndStoreInBigQuery() {
+        logger.info("Fetching current AQI for all {} cities", CITY_COORDINATES.size());
         CITY_COORDINATES.forEach((city, coordinates) -> {
             int aqi = getCurrentAQI(coordinates[0], coordinates[1]);
+            logger.debug("AQI for {}: {}", city, aqi);
             long timestamp = System.currentTimeMillis() / 1000;
             storeDataInBigQuery(aqi, coordinates[0], coordinates[1], timestamp, city, "currentaqi");
         });
@@ -119,28 +124,32 @@ public class PollutionDataService {
 
     public void fetchForecastDataAndStoreInBigQuery(String city) {
         double[] coordinates = CITY_COORDINATES.get(city);
-        System.out.println("test");
+        logger.debug("Fetching forecast data for city: {}", city);
         if (coordinates != null) {
             PollutionData forecastData = getForecastData(coordinates[0], coordinates[1]);
             forecastData.getList().forEach(forecast -> {
                 double pm25 = forecast.getComponents().getPm2_5();
                 int aqi = UtilityMethods.convertPM25ToAQI(pm25);
                 long timestamp = forecast.getDt();
-                if (!isDuplicateEntry("currentapi", "forecastaqi", city, timestamp)) { // Check if data is not duplicate
+                if (!isDuplicateEntry("currentapi", "forecastaqi", city, timestamp)) {
                     storeDataInBigQuery(aqi, coordinates[0], coordinates[1], timestamp, city, "forecastaqi");
+                } else {
+                    logger.debug("Skipping duplicate forecast entry for {} at timestamp {}", city, timestamp);
                 }
             });
+            logger.info("Forecast data stored for city: {}", city);
         } else {
-            // Handle unknown city
+            logger.warn("Unknown city requested for forecast: {}", city);
         }
     }
 
-//    @Scheduled(fixedRate = 3600000) // 3600000 milliseconds = 1 hour
-//    public void fetchDataAndStoreInBigQuery() {
-//        // Assuming you want to fetch current data; adjust as needed
-//        int data = getCurrentData(13.7563, 100.5018); // Example coordinates for Bangkok
-//        storeDataInBigQuery(data);
-//    }
+    @Scheduled(cron = "0 0 * * * *") // Every hour
+    public void scheduledFetchAllCities() {
+        logger.info("Scheduled AQI fetch started for all cities");
+        fetchAllCurrentDataAndStoreInBigQuery();
+        fetchAllForecastDataAndStoreInBigQuery();
+        logger.info("Scheduled AQI fetch completed");
+    }
 
 //    public void testSaveDataToBigQuery() {
 //        // Use hardcoded data or fetch from somewhere

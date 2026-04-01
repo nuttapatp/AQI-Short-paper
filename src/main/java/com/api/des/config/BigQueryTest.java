@@ -3,25 +3,24 @@ package com.api.des.config;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BigQueryTest {
 
+    private static final Logger log = LoggerFactory.getLogger(BigQueryTest.class);
+
     public static void testBigQueryConnection() {
         try {
-            // Instantiate a client. If you don't specify credentials when constructing the client, the
-            // client library will look for credentials via the environment variable.
             BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 
-            // Make a request to list datasets
             for (Dataset dataset : bigQuery.listDatasets().iterateAll()) {
-                System.out.println(dataset.getDatasetId().getDataset());
+                log.debug("BigQuery dataset found: {}", dataset.getDatasetId().getDataset());
             }
 
-            System.out.println("BigQuery connection test completed successfully.");
+            log.info("BigQuery connection test completed successfully");
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to connect to BigQuery: " + e.getMessage());
+            log.error("Failed to connect to BigQuery: {}", e.getMessage(), e);
         }
     }
 }

@@ -22,11 +22,11 @@ public class BigQueryConfig {
                 inputStream = new java.io.FileInputStream(file);
             } else {
                 inputStream = getClass().getClassLoader()
-                        .getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
+                        .getResourceAsStream("air-quality-api-491405-7c36b2e10284.json");
             }
         } else {
             inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("shortpaper-airpollution-412710-4e5277762482.json");
+                    .getResourceAsStream("air-quality-api-491405-7c36b2e10284.json");
         }
 
         if (inputStream == null) {
